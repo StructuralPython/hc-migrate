@@ -76,7 +76,10 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
-    source: Path = args.source
+    # Windows PowerShell passes `~` through literally, so expand it ourselves.
+    source: Path = args.source.expanduser()
+    if args.output is not None:
+        args.output = args.output.expanduser()
     if not source.exists():
         print(f"error: {source} does not exist", file=sys.stderr)
         return 2

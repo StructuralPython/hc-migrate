@@ -138,6 +138,16 @@ def test_cli_single_file_default_output(tmp_path):
     assert (tmp_path / "calc.py").exists()
 
 
+def test_cli_expands_tilde(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+    nbformat.write(HANDCALCS_NB, tmp_path / "calc.ipynb")
+    assert main(["~/calc.ipynb", "~/out", "-q"]) == 0
+    assert (tmp_path / "out" / "calc.py").exists()
+    assert not (tmp_path / "~").exists()
+
+
 def test_cli_reports_bad_notebook(tmp_path):
     (tmp_path / "bad.ipynb").write_text("not json", encoding="utf-8")
     nbformat.write(HANDCALCS_NB, tmp_path / "good.ipynb")
