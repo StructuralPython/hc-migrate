@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - uses: astral-sh/setup-uv@v10.3.0
+      with:
+        version: "0.13.1"
+        python-version: ${{ matrix.python-version }}
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+    - name: Test
+      run: uv run --locked --group test pytest
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - uses: astral-sh/setup-uv@v10.3.0
+      with:
+        version: "0.13.1"
+        python-version: "3.13"
+    - name: Black
+      run: uv run --locked --only-group lint black src tests --check

@@ -1,0 +1,37 @@
+[project]
+name = "handcalcs-migrate"
+version = "0.1.0"
+description = "Convert Jupyter notebooks and scripts written for handcalcs v1 to handcalcs v2."
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "Connor Ferster" }]
+requires-python = ">=3.11"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: Jupyter",
+    "Environment :: Console",
+]
+
+[project.scripts]
+handcalcs-migrate = "handcalcs_migrate.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/connorferster/handcalcs-migrate"
+"handcalcs v1 → v2 guide" = "https://handcalcs.structuralpython.com/getting-started/migrating-from-v1.html"
+
+[dependency-groups]
+# handcalcs v2 checks that converted cells parse and render.
+test = [
+    "pytest>=8",
+    "ipython>=9.18.1",
+    "handcalcs",
+]
+lint = ["black>=25.1"]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+handcalcs = { git = "https://github.com/connorferster/handcalcs", rev = "main" }
