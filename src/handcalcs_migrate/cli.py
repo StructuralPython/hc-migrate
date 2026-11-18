@@ -262,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
             handle_file(
                 source / relative,
                 dest / relative,
-                str(relative),
+                relative.as_posix(),
                 args,
                 options,
                 summary,

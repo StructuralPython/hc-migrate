@@ -37,7 +37,7 @@ def tree(tmp_path) -> Path:
 
 
 def files(root: Path) -> set[str]:
-    return {str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()}
+    return {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
 
 
 def test_no_arguments_prints_help(capsys):
