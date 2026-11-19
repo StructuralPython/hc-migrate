@@ -38,7 +38,7 @@ $ pipx install handcalcs-migrate        # or: uv tool install handcalcs-migrate
 $ uvx handcalcs-migrate calcs/          # or run it once, without installing
 ```
 
-The converted notebooks need handcalcs 2.0 or later.
+The converted notebooks need handcalcs 2.0.0rc5 or later.
 
 ## What it converts
 
@@ -52,6 +52,8 @@ The converted notebooks need handcalcs 2.0 or later.
 | `%%render params` | `# hc: -g` above each run of assignments (a parameter grid) |
 | `%%render symbolic` | `# hc: mode = "ass sym"` |
 | `%%render short` | `%%render` (the default) |
+| `%%tex` (printed the LaTeX source) | `%%source latex` (prints it in v2) |
+| `%%render sympy` | `# hc: -y`: a `name = name` line whose right-hand name holds a SymPy expression runs as that expression |
 | `## text` between equations | `# text` (in v2, `##` is a heading) |
 | a `# comment` line (v1 didn't show it) | the same comment, wrapped in `# hc: -i` / `# hc: -s` so it stays hidden |
 | `x = 1  # ignore` | `x = 1  # hc: -i` |
@@ -71,8 +73,6 @@ habit of accepting part of a word (`%%render param` is `params`).
 Some v1 code has no direct v2 equivalent. It is converted as far as it can be,
 and listed under **warnings** (in the terminal and in `--report`):
 
-- `%%tex` cells, which printed the LaTeX source: they become `%%render`.
-- `%%render sympy` cells: not supported by handcalcs 2.0.
 - `@handcalc(left=..., right=...)` and `@handcalc(record=True)`.
 - Uses of a decorated function's result other than `latex, value = f(...)`:
   v1 returned `(latex, value)` and v2 returns `(value, latex)`.

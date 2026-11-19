@@ -25,13 +25,11 @@ Homepage = "https://github.com/connorferster/handcalcs-migrate"
 test = [
     "pytest>=8",
     "ipython>=9.18.1",
-    "handcalcs",
+    "handcalcs>=2.0.0rc5",
+    "sympy>=1.12",
 ]
 lint = ["black>=25.1"]
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]
 build-backend = "uv_build"
-
-[tool.uv.sources]
-handcalcs = { git = "https://github.com/connorferster/handcalcs", rev = "main" }
