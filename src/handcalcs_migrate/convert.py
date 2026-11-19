@@ -318,23 +318,19 @@ def is_render_cell(source: str) -> bool:
 
 
 def convert_render_cell(source: str, options: Options) -> Result:
-    """Convert a v1 ``%%render``/``%%tex`` cell to a v2 ``%%render`` cell."""
+    """
+    Convert a v1 ``%%render``/``%%tex`` cell to v2: ``%%render``, or for
+    ``%%tex`` (which printed the LaTeX source) ``%%source latex``, which does
+    the same in v2.
+    """
     lines = source.splitlines(keepends=True)
     magic, *rest = lines[0].strip().split(None, 1)
     args = parse_render_args(rest[0] if rest else "")
     end = line_ending(lines[0]) if len(lines) > 1 else "\n"
     notes: list[Note] = []
 
-    header = ["%%render" + end]
-    if magic == "%%tex":
-        notes.append(
-            warning(
-                "'%%tex' printed the LaTeX source in v1. It is now '%%render'; to "
-                "get LaTeX, run '%hc_default_renderer latex' in an earlier cell, "
-                "or render with HandCalcs(LatexRenderer())",
-                1,
-            )
-        )
+    new_magic = "%%source latex" if magic == "%%tex" else "%%render"
+    header = [new_magic + end]
     commands = []
     if args.override == "long":
         commands.append("-m")
@@ -345,10 +341,14 @@ def convert_render_cell(source: str, options: Options) -> Result:
         header.append(f"# hc: {' '.join(commands)}{end}")
     if args.override == "symbolic":
         header.append(f'# hc: mode = "ass sym"{end}')
+    if args.sympy:
+        # v1 wrote a SymPy expression into each 'name = name' line; v2's -y
+        # does the same, with the values its symbols have when the line runs.
+        header.append(f"# hc: -y{end}")
     given = (rest[0] if rest else "").strip()
     if given or magic == "%%tex":
         old = f"{magic} {given}".strip()
-        new = "%%render" + "".join(f" + '{l.strip()}'" for l in header[1:])
+        new = new_magic + "".join(f" + '{l.strip()}'" for l in header[1:])
         notes.append(change(f"'{old}' -> {new}", 1))
     for arg, meant in args.loose:
         notes.append(warning(f"v1 read the argument '{arg}' as '{meant}'", 1))
@@ -356,9 +356,10 @@ def convert_render_cell(source: str, options: Options) -> Result:
         notes.append(warning(f"v1 ignored the argument '{arg}'; it is dropped", 1))
     if args.sympy:
         notes.append(
-            warning(
-                "'sympy' cells are not supported by handcalcs 2.0: rewrite this "
-                "cell as plain Python",
+            change(
+                "'# hc: -y': each 'name = name' line whose right-hand name holds "
+                "a SymPy expression runs as that expression, with the values its "
+                "symbols have then",
                 1,
             )
         )

@@ -53,7 +53,7 @@ def test_one_file_default_output(tmp_path, capsys):
     assert converted.is_file()
     assert source.read_bytes() == FIXTURE.read_bytes()  # the source is unchanged
     out = capsys.readouterr().out
-    assert "converted" in out and "3 warnings" in out
+    assert "converted" in out and "1 warning" in out
 
 
 def test_one_file_with_output(tmp_path):

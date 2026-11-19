@@ -49,7 +49,7 @@ def test_fixture_converts():
     )
     assert cells[3].startswith("%%render\n# hc: -m\n# Moment of inertia\n")
     assert "M_max, latex = moment(5, 6)" in cells[8]
-    assert result.changed and len(result.warnings) == 3
+    assert result.changed and len(result.warnings) == 1
 
 
 def test_metadata_and_outputs_are_kept():

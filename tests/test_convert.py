@@ -69,7 +69,10 @@ def test_loose_argument_is_reported():
         ("%%render sci_not", "%%render\n# hc: -f .3e\n"),
         ("%%render symbolic", '%%render\n# hc: mode = "ass sym"\n'),
         ("%%render short", "%%render\n"),
-        ("%%tex", "%%render\n"),
+        ("%%tex", "%%source latex\n"),
+        ("%%tex long 2", "%%source latex\n# hc: -m -f .2f\n"),
+        ("%%render sympy", "%%render\n# hc: -y\n"),
+        ("%%render sympy 2", "%%render\n# hc: -f .2f\n# hc: -y\n"),
     ],
 )
 def test_render_arguments_become_commands(first, header):
@@ -89,11 +92,14 @@ def test_params_cell_gets_a_grid_per_run():
     )
 
 
-def test_tex_and_sympy_are_flagged():
-    assert "%%tex" in warnings(convert_render_cell("%%tex\na = 1", Options()))[0]
-    assert (
-        "sympy" in warnings(convert_render_cell("%%render sympy\na = 1", Options()))[0]
-    )
+def test_tex_and_sympy_convert_without_warnings():
+    for first in ("%%tex", "%%render sympy"):
+        result = convert_render_cell(f"{first}\na = 1", Options())
+        assert warnings(result) == []
+    notes = [
+        n.message for n in convert_render_cell("%%render sympy\na = 1", Options()).notes
+    ]
+    assert any("-y" in note and "SymPy" in note for note in notes)
 
 
 # --- Calculation lines ---
