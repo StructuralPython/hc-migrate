@@ -1,4 +1,4 @@
-# Build handcalcs-migrate and upload it to PyPI when a GitHub release is published.
+# Build hc-migrate and upload it to PyPI when a GitHub release is published.
 #
 # Uploads use PyPI trusted publishing (no API token): the project's PyPI settings
 # list this repository, this workflow file (python-publish.yml) and the 'pypi'
@@ -28,7 +28,7 @@ jobs:
       run: uv build
     - name: Check the version matches the release tag
       run: |
-        version=$(ls dist/*.whl | sed -E 's|dist/handcalcs_migrate-([^-]+)-.*|\1|')
+        version=$(ls dist/*.whl | sed -E 's|dist/hc_migrate-([^-]+)-.*|\1|')
         echo "wheel version: $version, release tag: $GITHUB_REF_NAME"
         [ "$version" = "${GITHUB_REF_NAME#v}" ] || {
           echo "::error::pyproject version $version does not match the tag $GITHUB_REF_NAME"
@@ -36,7 +36,7 @@ jobs:
         }
     - name: Check __version__ matches pyproject
       run: |
-        init=$(sed -nE 's/^__version__ = "(.*)"/\1/p' src/handcalcs_migrate/__init__.py)
+        init=$(sed -nE 's/^__version__ = "(.*)"/\1/p' src/hc_migrate/__init__.py)
         [ "$init" = "${GITHUB_REF_NAME#v}" ] || {
           echo "::error::__version__ $init does not match the tag $GITHUB_REF_NAME"
           exit 1
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/handcalcs-migrate/
+      url: https://pypi.org/project/hc-migrate/
     permissions:
       id-token: write  # trusted publishing
     steps:

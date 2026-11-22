@@ -1,7 +1,7 @@
 # Command-line options
 
 ```text
-handcalcs-migrate SOURCE [options]
+hc-migrate SOURCE [options]
 ```
 
 `SOURCE` is a notebook (`.ipynb`), a Python file (`.py`) or a folder.

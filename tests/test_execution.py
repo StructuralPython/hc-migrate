@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from handcalcs_migrate.notebook import Options, convert_notebook
+from hc_migrate.notebook import Options, convert_notebook
 
 pytest.importorskip("handcalcs")
 pytest.importorskip("IPython")
@@ -65,7 +65,7 @@ def test_converted_sympy_cell_substitutes(shell):
     pytest.importorskip("sympy")
     from IPython.utils.capture import capture_output
 
-    from handcalcs_migrate.convert import convert_render_cell
+    from hc_migrate.convert import convert_render_cell
 
     shell.run_cell("import sympy as sp\nw, L = sp.symbols('w L')\nM_mid = w * L**2 / 8")
     converted = convert_render_cell(

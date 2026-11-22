@@ -1,5 +1,5 @@
 [project]
-name = "handcalcs-migrate"
+name = "hc-migrate"
 version = "0.1.0"
 description = "Convert Jupyter notebooks and scripts written for handcalcs v1 to handcalcs v2."
 readme = "README.md"
@@ -14,10 +14,10 @@ classifiers = [
 ]
 
 [project.scripts]
-handcalcs-migrate = "handcalcs_migrate.cli:main"
+hc-migrate = "hc_migrate.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/connorferster/handcalcs-migrate"
+Homepage = "https://github.com/StructuralPython/hc-migrate"
 "handcalcs v1 → v2 guide" = "https://handcalcs.structuralpython.com/getting-started/migrating-from-v1.html"
 
 [dependency-groups]

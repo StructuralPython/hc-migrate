@@ -1,8 +1,8 @@
-"""Converting v1 cells and Python source (handcalcs_migrate.convert)."""
+"""Converting v1 cells and Python source (hc_migrate.convert)."""
 
 import pytest
 
-from handcalcs_migrate.convert import (
+from hc_migrate.convert import (
     Names,
     Options,
     convert_python,

@@ -1,10 +1,10 @@
-# handcalcs-migrate
+# hc-migrate
 
 Convert Jupyter notebooks and Python files written for
 [handcalcs](https://github.com/connorferster/handcalcs) v1 to handcalcs v2.
 
 ```console
-$ handcalcs-migrate beam.ipynb
+$ hc-migrate beam.ipynb
 converted         beam.ipynb  (6 changes, 0 warnings)
 
 1 file converted, 0 already fine, 0 warnings.
@@ -15,7 +15,7 @@ Point it at a folder and it converts a copy of the whole tree, so a library of
 calculations moves to v2 in one step:
 
 ```console
-$ handcalcs-migrate calcs/ -o calcs-v2 --report report.md
+$ hc-migrate calcs/ -o calcs-v2 --report report.md
 converted         Concrete/Basic Beam Shear.ipynb  (4 changes, 0 warnings)
 converted         Wood/Nails in single shear.ipynb  (14 changes, 0 warnings)
 ...
@@ -31,11 +31,11 @@ converted. Files that don't use handcalcs are copied as they are.
 
 ## Install
 
-handcalcs-migrate needs Python 3.11 or later and nothing else.
+hc-migrate needs Python 3.11 or later and nothing else.
 
 ```console
-$ pipx install handcalcs-migrate        # or: uv tool install handcalcs-migrate
-$ uvx handcalcs-migrate calcs/          # or run it once, without installing
+$ pipx install hc-migrate        # or: uv tool install hc-migrate
+$ uvx hc-migrate calcs/          # or run it once, without installing
 ```
 
 The converted notebooks need handcalcs 2.0.0rc5 or later.
@@ -99,7 +99,7 @@ nested), and `phiM` is φM. `--v1-names` keeps the v1 look.
 ```
 
 `.git`, `.ipynb_checkpoints`, `__pycache__` and `.venv` are always skipped.
-`python -m handcalcs_migrate` is the same command.
+`python -m hc_migrate` is the same command.
 
 See the handcalcs guide,
 [Coming from handcalcs v1](https://handcalcs.structuralpython.com/getting-started/migrating-from-v1.html),

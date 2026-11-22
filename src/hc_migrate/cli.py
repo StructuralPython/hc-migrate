@@ -1,8 +1,8 @@
 """
-The ``handcalcs-migrate`` command.
+The ``hc-migrate`` command.
 
-    handcalcs-migrate calc.ipynb               # writes calc_v2.ipynb
-    handcalcs-migrate projects/ -o projects-v2 # converts a copy of the tree
+    hc-migrate calc.ipynb               # writes calc_v2.ipynb
+    hc-migrate projects/ -o projects-v2 # converts a copy of the tree
 
 The source is never changed.
 """
@@ -36,11 +36,11 @@ never changed. Files that don't use handcalcs are copied as they are.
 
 EPILOG = f"""\
 examples:
-  handcalcs-migrate beam.ipynb                  writes beam_v2.ipynb
-  handcalcs-migrate beam.ipynb -o new/beam.ipynb
-  handcalcs-migrate calcs/                      writes calcs_v2/
-  handcalcs-migrate calcs/ -o calcs-v2 --report report.md
-  handcalcs-migrate calcs/ --dry-run            only reports what would change
+  hc-migrate beam.ipynb                  writes beam_v2.ipynb
+  hc-migrate beam.ipynb -o new/beam.ipynb
+  hc-migrate calcs/                      writes calcs_v2/
+  hc-migrate calcs/ -o calcs-v2 --report report.md
+  hc-migrate calcs/ --dry-run            only reports what would change
 
 What changes, and what to check by hand afterwards, is reported for each file.
 The v1 to v2 guide: {GUIDE}
@@ -59,7 +59,7 @@ class Summary:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="handcalcs-migrate",
+        prog="hc-migrate",
         description=DESCRIPTION,
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,

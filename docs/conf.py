@@ -1,19 +1,19 @@
-"""Sphinx configuration for the handcalcs-migrate documentation."""
+"""Sphinx configuration for the hc-migrate documentation."""
 
 import os
 import pathlib
 import re
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
-REPO_URL = "https://github.com/connorferster/handcalcs-migrate"
+REPO_URL = "https://github.com/StructuralPython/hc-migrate"
 
 # Read the version from the source rather than importing the package, so the
 # docs build needs only the 'doc' dependency group.
-_init = (REPO_ROOT / "src" / "handcalcs_migrate" / "__init__.py").read_text()
+_init = (REPO_ROOT / "src" / "hc_migrate" / "__init__.py").read_text()
 release = re.search(r'^__version__ = "(.+)"', _init, re.M).group(1)
 version = release
 
-project = "handcalcs-migrate"
+project = "hc-migrate"
 author = "Connor Ferster"
 copyright = "2026, Connor Ferster"
 
@@ -29,15 +29,15 @@ myst_enable_extensions = ["colon_fence", "deflist"]
 myst_heading_anchors = 3
 
 html_theme = "shibuya"
-html_title = "handcalcs-migrate"
+html_title = "hc-migrate"
 html_baseurl = os.environ.get(
-    "DOCS_URL", "https://handcalcs-migrate.structuralpython.com/"
+    "DOCS_URL", "https://hc-migrate.structuralpython.com/"
 )
 
 html_context = {
     "source_type": "github",
     "source_user": "connorferster",
-    "source_repo": "handcalcs-migrate",
+    "source_repo": "hc-migrate",
     "source_version": "main",
     "source_docs_path": "/docs/",
 }

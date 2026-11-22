@@ -1,11 +1,11 @@
-"""Converting whole notebooks and scripts (handcalcs_migrate.notebook)."""
+"""Converting whole notebooks and scripts (hc_migrate.notebook)."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from handcalcs_migrate.notebook import Options, convert_notebook, convert_script
+from hc_migrate.notebook import Options, convert_notebook, convert_script
 
 FIXTURE = Path(__file__).parent / "fixtures" / "v1_beam.ipynb"
 

@@ -3,7 +3,7 @@
 ## One notebook or script
 
 ```console
-$ handcalcs-migrate beam.ipynb
+$ hc-migrate beam.ipynb
 converted         beam.ipynb  (6 changes, 0 warnings)
 
 1 file converted, 0 already fine, 0 warnings.
@@ -17,7 +17,7 @@ there. Python files (`.py`) are converted the same way.
 ## A folder of calculations
 
 ```console
-$ handcalcs-migrate calcs/ -o calcs-v2 --report report.md
+$ hc-migrate calcs/ -o calcs-v2 --report report.md
 converted         Concrete/Basic Beam Shear.ipynb  (4 changes, 0 warnings)
 converted         Wood/Nails in single shear.ipynb  (14 changes, 0 warnings)
 ...
@@ -39,7 +39,7 @@ files.
 1. See what would change, without writing anything:
 
    ```console
-   $ handcalcs-migrate calcs/ --dry-run --report report.md
+   $ hc-migrate calcs/ --dry-run --report report.md
    ```
 
 2. Read the warnings in `report.md` (see [](checks.md)).

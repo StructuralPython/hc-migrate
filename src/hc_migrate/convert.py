@@ -22,7 +22,7 @@ import re
 import tokenize
 from dataclasses import dataclass, field
 
-TOOL = "handcalcs-migrate"
+TOOL = "hc-migrate"
 GUIDE = "https://handcalcs.structuralpython.com/getting-started/migrating-from-v1.html"
 
 

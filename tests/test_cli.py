@@ -1,4 +1,4 @@
-"""The handcalcs-migrate command (handcalcs_migrate.cli)."""
+"""The hc-migrate command (hc_migrate.cli)."""
 
 import json
 import shutil
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from handcalcs_migrate.cli import main
+from hc_migrate.cli import main
 
 FIXTURE = Path(__file__).parent / "fixtures" / "v1_beam.ipynb"
 
@@ -42,7 +42,7 @@ def files(root: Path) -> set[str]:
 
 def test_no_arguments_prints_help(capsys):
     assert main([]) == 0
-    assert capsys.readouterr().out.startswith("usage: handcalcs-migrate")
+    assert capsys.readouterr().out.startswith("usage: hc-migrate")
 
 
 def test_one_file_default_output(tmp_path, capsys):
@@ -158,7 +158,7 @@ def test_python_dash_m(tmp_path):
         [
             sys.executable,
             "-m",
-            "handcalcs_migrate",
+            "hc_migrate",
             str(FIXTURE),
             "-o",
             str(tmp_path / "x.ipynb"),

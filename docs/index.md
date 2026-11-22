@@ -1,10 +1,10 @@
-# handcalcs-migrate
+# hc-migrate
 
 Convert Jupyter notebooks and Python files written for
 [handcalcs](https://handcalcs.structuralpython.com/) v1 to handcalcs v2.
 
 ```console
-$ handcalcs-migrate beam.ipynb
+$ hc-migrate beam.ipynb
 converted         beam.ipynb  (6 changes, 0 warnings)
 
 1 file converted, 0 already fine, 0 warnings.
