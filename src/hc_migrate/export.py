@@ -407,31 +407,42 @@ def displayed_markdown(statement: ast.stmt) -> str | None:
 
 
 def show_displayed_markdown(
-    text: str, where: str, notes: list[tuple[str, Note]]
+    text: str,
+    where: str,
+    notes: list[tuple[str, Note]],
+    outputs: list[dict] | None = None,
+    accounted: int = 0,
 ) -> list[str | Shown]:
     """
     Code lines, with each ``display(Markdown(f"..."))`` replaced by the
     Markdown as comment lines (``Shown``), its values filled by handcalcs
-    (``{{ x }}``). Other output (``display``, ``print``) gets a warning.
+    (``{{ x }}``). Other output gets a warning: from the cell's saved
+    ``outputs``, or, in a notebook saved without outputs, a last line that is
+    a value (not a call).
     """
     lines: list[str | Shown] = list(text.splitlines())
     tree = ast.parse(text)
     replaced = 0
-    other = False
     for statement in reversed(tree.body):
         template = displayed_markdown(statement)
         if template is not None:
             shown = [Shown(l) for l in markdown_lines(template)]
             lines[statement.lineno - 1 : statement.end_lineno] = shown
             replaced += 1
-        elif isinstance(statement, ast.Expr) and _call_name(statement.value) in (
-            "display",
-            "print",
-            "Markdown",
-            "Latex",
-            "HTML",
-        ):
-            other = True
+    if outputs:
+        shown_outputs = sum(
+            o.get("output_type") in ("execute_result", "display_data", "stream")
+            for o in outputs
+        )
+        # ``accounted``: outputs already explained (displaying @handcalc calls).
+        other = shown_outputs > replaced + accounted
+    else:
+        last = tree.body[-1] if tree.body else None
+        other = (
+            isinstance(last, ast.Expr)
+            and displayed_markdown(last) is None
+            and isinstance(last.value, (ast.Name, ast.Attribute, ast.Subscript))
+        )
     if replaced:
         notes.append(
             (
@@ -447,8 +458,9 @@ def show_displayed_markdown(
             (
                 where,
                 warning(
-                    "this cell shows output (display, print) that the script "
-                    "won't: write it as a comment, or a calculation"
+                    "this cell shows output (display, print, or the value of "
+                    "its last line) that the script won't: write it as a "
+                    "comment or a calculation, or add it in your document"
                 ),
             )
         )
@@ -538,6 +550,7 @@ def code_cell_lines(
     where: str,
     notes: list[tuple[str, Note]],
     functions: set[str] = frozenset(),
+    outputs: list[dict] | None = None,
 ) -> list[str | Shown]:
     """
     A code cell that the notebook didn't render, as script lines: line magics
@@ -571,7 +584,8 @@ def code_cell_lines(
         if calls_displayed(statement, functions):
             for number in range(statement.lineno, statement.end_lineno + 1):
                 shown.add(text.splitlines()[number - 1])
-    lines = show_displayed_markdown(text, where, notes)
+    calls = sum(calls_displayed(st, functions) for st in tree.body)
+    lines = show_displayed_markdown(text, where, notes, outputs, calls)
     return [Shown(l) if isinstance(l, str) and l in shown else l for l in lines]
 
 
@@ -645,7 +659,9 @@ def notebook_segments(
                 segments.append(Segment("calc", lines))
                 codes.append(body_text)
             else:
-                lines = code_cell_lines(text, where, notes, functions)
+                lines = code_cell_lines(
+                    text, where, notes, functions, cell.get("outputs")
+                )
                 if lines:
                     segments.append(Segment("code", lines))
                     codes.append(
