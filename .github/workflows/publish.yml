@@ -1,7 +1,7 @@
 # Build hc-migrate and upload it to PyPI when a GitHub release is published.
 #
 # Uploads use PyPI trusted publishing (no API token): the project's PyPI settings
-# list this repository, this workflow file (python-publish.yml) and the 'pypi'
+# list this repository, this workflow file (publish.yml) and the 'pypi'
 # environment as a trusted publisher.
 
 name: Upload Python Package
