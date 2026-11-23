@@ -64,6 +64,7 @@ _EXCESS_BLANKS_RE = re.compile(r"\n{3,}")
 _COMMAND_RE = re.compile(r"^\s*#\s*hc\s*:\s*(.*)$")
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 _FENCE_RE = re.compile(r"^\s*(```|~~~)")
+_IMAGE_RE = re.compile(r"!\[[^\]]*\]\([^)]*\)|<img\b[^>]*>", re.I)
 _LIST_ITEM_RE = re.compile(r"^\s*(?:[*+-]|\d+[.)])\s+")
 _SET_OPTION_RE = re.compile(r"set_option\(\s*['\"](\w+)['\"]\s*,\s*([^)]+?)\s*\)")
 
@@ -182,6 +183,8 @@ def markdown_lines(text: str) -> list[str]:
     pending_break = False
     after_heading = False
     in_fence = False
+    # An HTML line break starts a new paragraph.
+    text = re.sub(r"[ \t]*<br\s*/?>[ \t]*", "\n\n", text, flags=re.I)
     for line in text.splitlines():
         line = line.rstrip()
         fence = bool(_FENCE_RE.match(line))
@@ -461,13 +464,88 @@ class Segment:
     lines: list[str | Shown]
 
 
+def displaying_functions(texts: list[str]) -> set[str]:
+    """The functions decorated with ``@handcalc(..., display=True)`` in ``texts``."""
+    names = set()
+    for text in texts:
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for decorator in node.decorator_list:
+                if (
+                    isinstance(decorator, ast.Call)
+                    and _call_name(decorator) == "handcalc"
+                    and any(
+                        k.arg == "display"
+                        and isinstance(k.value, ast.Constant)
+                        and k.value.value is True
+                        for k in decorator.keywords
+                    )
+                ):
+                    names.add(node.name)
+    return names
+
+
+def calls_displayed(statement: ast.stmt, functions: set[str]) -> bool:
+    """A top-level ``x = f(...)`` (or ``f(...)``) calling a displaying ``@handcalc``."""
+    if isinstance(statement, (ast.Assign, ast.Expr)):
+        return _call_name(statement.value) in functions
+    return False
+
+
+def drop_display_decorators(
+    text: str, functions: set[str], where: str, notes: list[tuple[str, Note]]
+) -> str:
+    """
+    ``text`` without the ``@handcalc(..., display=True)`` decorators of
+    ``functions``. A script can't show a function's working, and handcalcs
+    can't read the source of a function in a script it runs; with
+    ``display=True`` the function returned only its value, as it does
+    undecorated.
+    """
+    tree = ast.parse(text)
+    drop: list[tuple[int, int]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and (
+            node.name in functions
+        ):
+            for decorator in node.decorator_list:
+                if _call_name(decorator) == "handcalc":
+                    drop.append((decorator.lineno, decorator.end_lineno))
+    if not drop:
+        return text
+    lines = text.splitlines()
+    for start, end in sorted(drop, reverse=True):
+        del lines[start - 1 : end]
+    notes.append(
+        (
+            where,
+            change(
+                f"'@handcalc(..., display=True)' removed ({len(drop)}): the "
+                "script shows each call and its result"
+            ),
+        )
+    )
+    return "\n".join(lines)
+
+
 def code_cell_lines(
-    source: str, where: str, notes: list[tuple[str, Note]]
+    source: str,
+    where: str,
+    notes: list[tuple[str, Note]],
+    functions: set[str] = frozenset(),
 ) -> list[str | Shown]:
     """
     A code cell that the notebook didn't render, as script lines: line magics
     and ``!`` commands dropped, a ``%render <line>`` kept as a ``Shown`` line,
-    a non-Python cell magic commented out. Empty when nothing is left.
+    a non-Python cell magic commented out. A call to a ``@handcalc`` function
+    that displayed its render (in ``functions``) is shown too: the script shows
+    the call and its result, not the function's working. Empty when nothing
+    is left.
     """
     magics, lines = cell_magics(source)
     if magics and magics[-1][0] in NON_PYTHON_CELL_MAGICS:
@@ -487,20 +565,14 @@ def code_cell_lines(
     except SyntaxError as error:
         notes.append((where, warning(f"not valid Python ({error.msg}); commented out")))
         return comment_out(text.splitlines())
-    if re.search(r"^\s*@handcalc\b", text, re.M):
-        notes.append(
-            (
-                where,
-                warning(
-                    "a script doesn't show what @handcalc functions render: put "
-                    "the calculation in a %%render cell before exporting"
-                ),
-            )
-        )
+    text = drop_display_decorators(text, functions, where, notes)
+    tree = ast.parse(text)
+    for statement in tree.body:
+        if calls_displayed(statement, functions):
+            for number in range(statement.lineno, statement.end_lineno + 1):
+                shown.add(text.splitlines()[number - 1])
     lines = show_displayed_markdown(text, where, notes)
-    return [
-        Shown(l) if isinstance(l, str) and l in shown else l for l in lines
-    ]
+    return [Shown(l) if isinstance(l, str) and l in shown else l for l in lines]
 
 
 def notebook_segments(
@@ -509,6 +581,21 @@ def notebook_segments(
     segments: list[Segment] = []
     codes: list[str] = []
     first = True
+    functions = displaying_functions(
+        [cell_text(c) for c in notebook.get("cells", []) if c.get("cell_type") == "code"]
+    )
+    if functions:
+        notes.append(
+            (
+                "",
+                warning(
+                    f"@handcalc functions ({', '.join(sorted(functions))}): the "
+                    "script shows each call and its result, not the function's "
+                    "working; to show the working, write the calculation in a "
+                    "%%render cell"
+                ),
+            )
+        )
     for index, cell in enumerate(notebook.get("cells", [])):
         where = f"cell {index + 1}"
         text = cell_text(cell)
@@ -520,6 +607,18 @@ def notebook_segments(
             first = False
         kind = cell.get("cell_type")
         if kind == "markdown":
+            images = _IMAGE_RE.findall(text)
+            if images:
+                text = _IMAGE_RE.sub("", text)
+                notes.append(
+                    (
+                        where,
+                        warning(
+                            f"image(s) left out ({len(images)}): handcalcs doesn't "
+                            "show images; add them in your document"
+                        ),
+                    )
+                )
             lines = markdown_lines(text)
             if lines:
                 segments.append(Segment("prose", lines))
@@ -546,7 +645,7 @@ def notebook_segments(
                 segments.append(Segment("calc", lines))
                 codes.append(body_text)
             else:
-                lines = code_cell_lines(text, where, notes)
+                lines = code_cell_lines(text, where, notes, functions)
                 if lines:
                     segments.append(Segment("code", lines))
                     codes.append(
@@ -588,6 +687,8 @@ def assemble(segments: list[Segment], show_code: bool) -> str:
 
 
 def normalize_whitespace(code: str) -> str:
+    # A hidden block that hides nothing (e.g. after a shown last line).
+    code = re.sub(rf"^{re.escape(HIDE)}\n(?:\s*\n)*{re.escape(SHOW)}$\n?", "", code, flags=re.M)
     lines = [line.rstrip() for line in code.splitlines()]
     code = "\n".join(lines).strip("\n")
     return _EXCESS_BLANKS_RE.sub("\n\n", code) + "\n"
