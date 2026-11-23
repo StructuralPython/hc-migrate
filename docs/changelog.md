@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-11-23)
 
 The first release of hc-migrate, which joins two tools: handcalcs-migrate
 (handcalcs v1 to v2) and nb_pyexporter (notebooks to scripts).
