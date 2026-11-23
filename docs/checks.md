@@ -9,6 +9,15 @@ and listed under **warnings**, in the terminal and in the `--report` file:
 - `custom_symbols`, `custom_brackets`, `greek_exclusions` and other removed
   options.
 
+Exporting a notebook as a script also warns about what a script can't show:
+
+- output a code cell showed (a table, a printed value, `display(...)`);
+- images in Markdown cells;
+- `@handcalc` functions: the script shows each call and its result, not the
+  function's working;
+- `%%render` arguments (`inputs=`, `destination=`), which don't apply to a script;
+- a code cell that isn't valid Python (it is commented out).
+
 `-q` / `--quiet` lists only the files with warnings.
 
 ## Things that look a little different

@@ -1,26 +1,32 @@
 # hc-migrate
 
-Convert Jupyter notebooks and Python files written for
-[handcalcs](https://handcalcs.structuralpython.com/) v1 to handcalcs v2.
+Turn Jupyter notebooks into [handcalcs](https://handcalcs.structuralpython.com/) v2
+scripts, ready to render or publish, and bring calculations written for
+handcalcs v1 up to v2 on the way.
 
 ```console
 $ hc-migrate beam.ipynb
-converted         beam.ipynb  (6 changes, 0 warnings)
+exported          beam.ipynb -> beam.py  (6 changes, 0 warnings)
 
-1 file converted, 0 already fine, 0 warnings.
-Wrote beam_v2.ipynb
+1 notebook exported, 0 warnings.
+Wrote beam.py
 ```
 
-Point it at a folder and it converts a copy of the whole tree, so a library of
-calculations moves to v2 in one step.
+The script renders as the notebook showed: the Markdown is prose and headings,
+the `%%render` cells are calculations, and the other code runs but isn't shown.
+Render it with `handcalcs beam.py`, `HandCalcs(...)(path)` or YMPrint's `_hc`
+block.
 
-**Your files are never changed.** A file is written next to the original with
-`_v2` added to its name; a folder is copied to `<folder>_v2` (or `-o DEST`).
+A notebook written for handcalcs v1 is converted to v2 first. To keep it a
+notebook, use `--to ipynb`: the converted copy is written next to it.
+
+**Existing files are never changed.**
 
 ```{toctree}
 :maxdepth: 2
 
 install
+exporting
 converting
 conversions
 checks

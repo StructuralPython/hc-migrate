@@ -472,3 +472,12 @@ def test_exported_fixture_renders_with_handcalcs(tmp_path, monkeypatch):
     assert "Moment of inertia" in out  # v1's '##' text between equations
     assert "chk" not in out  # '# ignore'
     assert "V_max = shear(5, 6)" in out  # a displaying @handcalc call
+
+
+def test_nbconvert_exporter_writes_what_the_command_writes():
+    pytest.importorskip("nbconvert")
+    from hc_migrate.nbconvert_exporter import HandcalcsScriptExporter
+
+    body, resources = HandcalcsScriptExporter().from_notebook_node(HANDCALCS_NB)
+    assert body == export(HANDCALCS_NB)
+    assert resources["output_extension"] == ".py"
