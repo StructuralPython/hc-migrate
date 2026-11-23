@@ -8,13 +8,13 @@ hc-migrate SOURCE [options]
 
 `-o`, `--output DEST`
 : Where to write: a file, or a folder for a tree. The default is next to
-  `SOURCE`: `beam.py` for `beam.ipynb`, `beam_v2.ipynb` with `--to ipynb`,
+  `SOURCE`: `beam.py` for `beam.ipynb`, `beam_v2.ipynb` with `--to nb`,
   `beam_v2.py` for a v1 `beam.py`. For a folder, a script next to each notebook,
-  or `<folder>_v2` with `--to ipynb`.
+  or `<folder>_v2` with `--to nb`.
 
-`--to py`, `--to ipynb`
-: `py` (the default): notebooks become handcalcs v2 scripts. `ipynb`: notebooks
-  are converted from v1 to v2 and stay notebooks.
+`--to py`, `--to nb`
+: `py` (the default): notebooks become handcalcs v2 scripts. `nb`: notebooks
+  written for v1 are converted to v2 and stay notebooks.
 
 `--from auto`, `--from v1`, `--from v2`
 : The handcalcs the source was written for. `auto` (the default) tells from the
@@ -43,7 +43,7 @@ hc-migrate SOURCE [options]
 : v1: keep v1's nested subscripts and Greek names.
 
 `--clear-outputs`
-: `--to ipynb`: clear the outputs of converted cells.
+: `--to nb`: clear the outputs of converted cells.
 
 `--exclude PATTERN`
 : Skip matching files and folders. Can be given more than once.

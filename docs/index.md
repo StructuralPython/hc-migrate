@@ -1,8 +1,17 @@
 # hc-migrate
 
-Turn Jupyter notebooks into [handcalcs](https://handcalcs.structuralpython.com/) v2
-scripts, ready to render or publish, and bring calculations written for
-handcalcs v1 up to v2 on the way.
+Two conversions for Jupyter notebooks and
+[handcalcs](https://handcalcs.structuralpython.com/):
+
+1. **`--to nb`**: update notebooks written for handcalcs v1 so they work with
+   handcalcs v2. They stay notebooks. See [](converting.md).
+2. **`--to py`** (the default): turn notebooks, written for v1 or v2, into
+   handcalcs v2 scripts, ready to render or publish. See [](exporting.md).
+
+```console
+$ hc-migrate beam.ipynb --to nb --output beam_v2.ipynb
+$ hc-migrate beam.ipynb --to py --output beam.py
+```
 
 ```console
 $ hc-migrate beam.ipynb
@@ -17,8 +26,7 @@ the `%%render` cells are calculations, and the other code runs but isn't shown.
 Render it with `handcalcs beam.py`, `HandCalcs(...)(path)` or YMPrint's `_hc`
 block.
 
-A notebook written for handcalcs v1 is converted to v2 first. To keep it a
-notebook, use `--to ipynb`: the converted copy is written next to it.
+With `--to py`, a notebook written for handcalcs v1 is converted to v2 first.
 
 **Existing files are never changed.**
 

@@ -22,9 +22,10 @@ V1_PATTERNS = (
     r"^\s*%load_ext\s+handcalcs\.render\b",
     r"^\s*%%tex\b",
     # v1 @handcalc keywords.
-    r"@handcalc\([^)]*\b(?:override|precision|left|right|jupyter_display|record)\s*=",
-    # v1 options.
-    r"set_option\(\s*['\"](?:display_precision|param_columns|latex_block_start|"
+    r"^\s*@handcalc\([^)]*\b(?:override|precision|left|right|jupyter_display|record)\s*=",
+    # v1 options (not in a comment: a converted file comments out the ones
+    # v2 removed).
+    r"^[^#\n]*set_option\(\s*['\"](?:display_precision|param_columns|latex_block_start|"
     r"latex_block_end|math_environment_start|math_environment_end|line_break|"
     r"custom_symbols|custom_brackets|greek_exclusions|underscore_subscripts|"
     r"preferred_string_formatter|decimal_separator)['\"]",
