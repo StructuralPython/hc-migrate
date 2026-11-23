@@ -98,7 +98,19 @@ def test_only_converted(tree):
 
 def test_exclude(tree):
     dest = tree.parent / "out"
-    main(["--to", "ipynb", str(tree), "-o", str(dest), "--exclude", "columns", "--exclude", "*.csv"])
+    main(
+        [
+            "--to",
+            "ipynb",
+            str(tree),
+            "-o",
+            str(dest),
+            "--exclude",
+            "columns",
+            "--exclude",
+            "*.csv",
+        ]
+    )
     assert files(dest) == {"beams/beam.ipynb", "lib.py", "plain.ipynb"}
 
 

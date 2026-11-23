@@ -313,6 +313,8 @@ def calc_lines(body: list[str], before: dict[str, Any]) -> list[str]:
         if visibility:
             hidden = visibility == "hide"
     out = list(body)
+    while out and not out[-1].strip():
+        out.pop()
     if hidden:
         out.append(SHOW)
     reset = reset_line(changed, before)
@@ -596,7 +598,11 @@ def notebook_segments(
     codes: list[str] = []
     first = True
     functions = displaying_functions(
-        [cell_text(c) for c in notebook.get("cells", []) if c.get("cell_type") == "code"]
+        [
+            cell_text(c)
+            for c in notebook.get("cells", [])
+            if c.get("cell_type") == "code"
+        ]
     )
     if functions:
         notes.append(
@@ -704,7 +710,9 @@ def assemble(segments: list[Segment], show_code: bool) -> str:
 
 def normalize_whitespace(code: str) -> str:
     # A hidden block that hides nothing (e.g. after a shown last line).
-    code = re.sub(rf"^{re.escape(HIDE)}\n(?:\s*\n)*{re.escape(SHOW)}$\n?", "", code, flags=re.M)
+    code = re.sub(
+        rf"^{re.escape(HIDE)}\n(?:\s*\n)*{re.escape(SHOW)}$\n?", "", code, flags=re.M
+    )
     lines = [line.rstrip() for line in code.splitlines()]
     code = "\n".join(lines).strip("\n")
     return _EXCESS_BLANKS_RE.sub("\n\n", code) + "\n"
