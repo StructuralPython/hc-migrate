@@ -354,6 +354,8 @@ def test_black_failure_falls_back(caplog, monkeypatch):
         (["%%render inputs=case\na = 1"], None),
         (["%%render\na = 1"], None),
         (["import handcalcs.render", "%%render\n# hc: -m\na = 1"], "v1"),
+        # Commented out by a conversion: not v1.
+        (["import handcalcs", '# handcalcs.set_option("custom_symbols", {})'], None),
     ],
 )
 def test_source_version(texts, version):

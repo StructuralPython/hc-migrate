@@ -63,6 +63,21 @@ def test_one_file_with_output(tmp_path):
     assert "".join(cells[3]["source"]).startswith("%%render\n# hc: -m\n")
 
 
+def test_converted_notebook_is_already_fine(tmp_path, capsys):
+    converted = tmp_path / "beam_v2.ipynb"
+    assert main(["--to", "ipynb", str(FIXTURE), "--output", str(converted)]) == 0
+    capsys.readouterr()
+    again = tmp_path / "again.ipynb"
+    assert main(["--to", "ipynb", str(converted), "--output", str(again)]) == 0
+    assert "1 already fine" in capsys.readouterr().out
+
+
+def test_to_py_with_output(tmp_path):
+    dest = tmp_path / "beam.py"
+    assert main(["--to", "py", str(FIXTURE), "--output", str(dest)]) == 0
+    assert "# hc: -i" in dest.read_text(encoding="utf-8")
+
+
 def test_existing_output_needs_force(tmp_path, capsys):
     dest = tmp_path / "new.ipynb"
     dest.write_text("keep")

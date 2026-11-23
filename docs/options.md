@@ -14,7 +14,7 @@ hc-migrate SOURCE [options]
 
 `--to py`, `--to ipynb`
 : `py` (the default): notebooks become handcalcs v2 scripts. `ipynb`: notebooks
-  are converted from v1 to v2 and stay notebooks.
+  written for v1 are converted to v2 and stay notebooks.
 
 `--from auto`, `--from v1`, `--from v2`
 : The handcalcs the source was written for. `auto` (the default) tells from the

@@ -1,11 +1,16 @@
 # hc-migrate
 
-Turn Jupyter notebooks into [handcalcs](https://github.com/connorferster/handcalcs)
-v2 scripts, ready to render or publish, and bring calculations written for
-handcalcs v1 up to v2 on the way.
+Two conversions for Jupyter notebooks and [handcalcs](https://github.com/connorferster/handcalcs):
+
+1. **`--to ipynb`**: update notebooks written for handcalcs v1 so they work with
+   handcalcs v2. They stay notebooks.
+2. **`--to py`** (the default): turn notebooks, written for v1 or v2, into
+   handcalcs v2 scripts (`.py`), ready to render or publish.
 
 ```console
-$ hc-migrate calcs/ -o scripts --report report.md
+$ hc-migrate beam.ipynb --to ipynb --output beam_v2.ipynb
+$ hc-migrate beam.ipynb --to py --output beam.py
+$ hc-migrate calcs/ --to py --output scripts --report report.md
 exported          Concrete/Basic Beam Shear.ipynb -> Basic Beam Shear.py  (5 changes, 0 warnings)
 exported          Wood/Nails in single shear.ipynb -> Nails in single shear.py  (15 changes, 2 warnings)
 ...
@@ -13,6 +18,13 @@ exported          Wood/Nails in single shear.ipynb -> Nails in single shear.py  
 Wrote scripts
 Report: report.md
 ```
+
+Without `--output`, a script is written next to its notebook (`beam.py`), and
+a converted notebook gets `_v2` in its name (`beam_v2.ipynb`; a folder is
+copied to `<folder>_v2`). **Existing files are never changed**, unless you
+pass `--force`.
+
+## Notebooks to scripts (`--to py`)
 
 A script renders as its notebook showed (with `handcalcs beam.py`,
 `HandCalcs(...)(path)` or YMPrint's `_hc` block):
@@ -26,20 +38,7 @@ A script renders as its notebook showed (with `handcalcs beam.py`,
 | Magics, `!` commands, front matter | Dropped |
 
 A notebook written for handcalcs v1 is converted to v2 first; v1 or v2 is told
-from the source (`--from v1|v2` decides). To keep a v1 notebook a notebook,
-converted to v2, use `--to ipynb`:
-
-```console
-$ hc-migrate beam.ipynb --to ipynb
-converted         beam.ipynb  (6 changes, 0 warnings)
-
-1 file converted, 0 already fine, 0 warnings.
-Wrote beam_v2.ipynb
-```
-
-**Existing files are never changed.** A script is written next to its notebook
-(or under `-o DEST`); a converted notebook or Python file gets `_v2` in its
-name, and a folder converted with `--to ipynb` is copied to `<folder>_v2`.
+from the source (`--from v1|v2` decides).
 
 hc-migrate joins two earlier tools, handcalcs-migrate and nb_pyexporter.
 
@@ -55,7 +54,11 @@ $ uvx hc-migrate calcs/          # or run it once, without installing
 The scripts and converted notebooks need handcalcs 2.0.
 `pip install "hc-migrate[nbconvert]"` adds `jupyter nbconvert --to hcpy`.
 
-## What it converts from v1
+## v1 notebooks to v2 (`--to ipynb`)
+
+The same conversion runs before a v1 notebook is exported with `--to py`.
+A `.py` file written for v1 is converted too.
+
 
 | handcalcs v1 | handcalcs v2 |
 |---|---|
@@ -102,7 +105,7 @@ nested), and `phiM` is φM. `--v1-names` keeps the v1 look.
 ```text
 -o, --output DEST     where to write: a file, or a folder for a tree
 --to {py,ipynb}       py: notebooks become v2 scripts (default);
-                      ipynb: v1 notebooks are converted and stay notebooks
+                      ipynb: v1 notebooks are converted to v2 and stay notebooks
 --from {auto,v1,v2}   the handcalcs the source was written for (default: auto)
 -f, --force           overwrite files (or DEST) that exist (also --overwrite)
 -n, --dry-run         report what would be written, and write nothing
