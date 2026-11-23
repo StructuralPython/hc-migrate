@@ -35,7 +35,7 @@ jobs:
           destination: "."
           storageZoneName: "${{ secrets.STORAGE_NAME }}"
           storagePassword: "${{ secrets.STORAGE_PASSWORD }}"
-          storageEndpoint: "uk.storage.bunnycdn.com"  # same region as the handcalcs docs (London)
+          storageEndpoint: "storage.bunnycdn.com"  # the storage zone is in Falkenstein (Bunny's main region)
           accessKey: "${{ secrets.STORAGE_KEY }}"
           pullZoneId: "${{ secrets.ZONE_ID }}"
           upload: "true"
