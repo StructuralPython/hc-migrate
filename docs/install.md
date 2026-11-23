@@ -1,7 +1,8 @@
 # Install
 
-hc-migrate needs Python 3.11 or later and nothing else. It doesn't need
-handcalcs itself: it reads and rewrites your files as text.
+hc-migrate needs Python 3.11 or later. It reads and rewrites your files as
+text, so it doesn't need handcalcs itself; black, which formats the scripts,
+comes with it.
 
 Install it as a command-line tool:
 
@@ -21,10 +22,12 @@ Or run it once, without installing:
 $ uvx hc-migrate calcs/
 ```
 
-`python -m hc_migrate` is the same command as `hc-migrate`.
+`python -m hc_migrate` is the same command as `hc-migrate`. For
+`jupyter nbconvert --to hcpy`, install the `nbconvert` extra:
+`pip install "hc-migrate[nbconvert]"`.
 
-The converted notebooks need **handcalcs 2.0.0rc5 or later**:
+The scripts and converted notebooks need **handcalcs 2.0** (2.0.0rc5 or later):
 
 ```console
-$ pip install --upgrade --pre handcalcs
+$ pip install --upgrade handcalcs
 ```

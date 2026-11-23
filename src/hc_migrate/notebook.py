@@ -14,11 +14,13 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from .detect import source_version
 from .convert import (
     Names,
     Note,
     Options as ConvertOptions,
     change,
+    warning,
     convert_python,
     convert_render_cell,
     is_render_cell,
@@ -40,6 +42,10 @@ class Options(ConvertOptions):
     v1_names: bool = False
     # Clear the outputs of the cells that were converted.
     clear_outputs: bool = False
+    # Which handcalcs the source was written for: "v1" (convert it), "v2"
+    # (leave it) or "auto" (tell from the source, see ``detect``; v2 when
+    # nothing tells).
+    source: str = "v1"
 
 
 @dataclass
@@ -149,16 +155,53 @@ def add_imports(
     return texts, notes
 
 
+def resolve_source(texts: list[str], options: Options) -> tuple[str, list[Note]]:
+    """
+    The handcalcs version the source was written for (``options.source``, or
+    detected for "auto"), and a note when it could not be told.
+    """
+    if options.source != "auto":
+        return options.source, []
+    found = source_version(texts)
+    if found:
+        return found, []
+    return "v2", [
+        warning(
+            "could not tell whether this was written for handcalcs v1 or v2; "
+            "treated as v2 (use --from v1 to convert it from v1)"
+        )
+    ]
+
+
 def convert_notebook(raw: str, options: Options) -> FileResult:
     """Convert a notebook's JSON text."""
     notebook: dict[str, Any] = json.loads(raw)
+    result = migrate_notebook(notebook, options)
+    result.text = raw
+    if result.changed:
+        indent = (
+            1 if re.match(r'\{\n "', raw) else (2 if re.match(r'\{\n  "', raw) else 1)
+        )
+        result.text = json.dumps(notebook, indent=indent, ensure_ascii=False) + "\n"
+    return result
+
+
+def migrate_notebook(notebook: dict[str, Any], options: Options) -> FileResult:
+    """
+    Convert a notebook (its parsed JSON) from v1 to v2 in place. The result's
+    text is empty; its notes say what changed.
+    """
     cells = notebook.get("cells", [])
     code = [(i, c) for i, c in enumerate(cells) if c.get("cell_type") == "code"]
     texts = {i: cell_text(c) for i, c in code}
     result = FileResult(
-        raw, uses_handcalcs=any(uses_handcalcs(t) for t in texts.values())
+        "", uses_handcalcs=any(uses_handcalcs(t) for t in texts.values())
     )
     if not result.uses_handcalcs:
+        return result
+    version, notes = resolve_source(list(texts.values()), options)
+    result.notes.extend(("", note) for note in notes)
+    if version != "v1":
         return result
 
     names = Names()
@@ -198,12 +241,6 @@ def convert_notebook(raw: str, options: Options) -> FileResult:
             if options.clear_outputs:
                 cell["outputs"] = []
                 cell["execution_count"] = None
-
-    if result.changed:
-        indent = (
-            1 if re.match(r'\{\n "', raw) else (2 if re.match(r'\{\n  "', raw) else 1)
-        )
-        result.text = json.dumps(notebook, indent=indent, ensure_ascii=False) + "\n"
     return result
 
 
@@ -211,6 +248,10 @@ def convert_script(text: str, options: Options) -> FileResult:
     """Convert a ``.py`` file."""
     result = FileResult(text, uses_handcalcs=uses_handcalcs(text))
     if not result.uses_handcalcs:
+        return result
+    version, notes = resolve_source([text], options)
+    result.notes.extend(("", note) for note in notes)
+    if version != "v1":
         return result
     names = Names()
     scan_names(text, names)

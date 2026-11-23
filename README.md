@@ -1,46 +1,61 @@
 # hc-migrate
 
-Convert Jupyter notebooks and Python files written for
-[handcalcs](https://github.com/connorferster/handcalcs) v1 to handcalcs v2.
+Turn Jupyter notebooks into [handcalcs](https://github.com/connorferster/handcalcs)
+v2 scripts, ready to render or publish, and bring calculations written for
+handcalcs v1 up to v2 on the way.
 
 ```console
-$ hc-migrate beam.ipynb
+$ hc-migrate calcs/ -o scripts --report report.md
+exported          Concrete/Basic Beam Shear.ipynb -> Basic Beam Shear.py  (5 changes, 0 warnings)
+exported          Wood/Nails in single shear.ipynb -> Nails in single shear.py  (15 changes, 2 warnings)
+...
+6 notebooks exported, 6 warnings.
+Wrote scripts
+Report: report.md
+```
+
+A script renders as its notebook showed (with `handcalcs beam.py`,
+`HandCalcs(...)(path)` or YMPrint's `_hc` block):
+
+| In the notebook | In the script |
+|---|---|
+| A Markdown cell | Comment lines: prose, and headings at the same level |
+| A `%%render` cell | Its lines; settings its commands changed are set back after it |
+| Any other code cell | Its lines between `# hc: -i` and `# hc: -s`: run, not shown (`--show-code` shows them) |
+| `%render` lines, `display(Markdown(f"..."))`, calls to `@handcalc(display=True)` functions | Shown |
+| Magics, `!` commands, front matter | Dropped |
+
+A notebook written for handcalcs v1 is converted to v2 first; v1 or v2 is told
+from the source (`--from v1|v2` decides). To keep a v1 notebook a notebook,
+converted to v2, use `--to ipynb`:
+
+```console
+$ hc-migrate beam.ipynb --to ipynb
 converted         beam.ipynb  (6 changes, 0 warnings)
 
 1 file converted, 0 already fine, 0 warnings.
 Wrote beam_v2.ipynb
 ```
 
-Point it at a folder and it converts a copy of the whole tree, so a library of
-calculations moves to v2 in one step:
+**Existing files are never changed.** A script is written next to its notebook
+(or under `-o DEST`); a converted notebook or Python file gets `_v2` in its
+name, and a folder converted with `--to ipynb` is copied to `<folder>_v2`.
 
-```console
-$ hc-migrate calcs/ -o calcs-v2 --report report.md
-converted         Concrete/Basic Beam Shear.ipynb  (4 changes, 0 warnings)
-converted         Wood/Nails in single shear.ipynb  (14 changes, 0 warnings)
-...
-6 files converted, 0 already fine, 1 copied, 0 warnings.
-Wrote calcs-v2
-Report: report.md
-```
-
-**Your files are never changed.** A file is written next to the original with
-`_v2` added to its name; a folder is copied to `<folder>_v2` (or `-o DEST`),
-with every file in it, and the notebooks and Python files in the copy are
-converted. Files that don't use handcalcs are copied as they are.
+hc-migrate joins two earlier tools, handcalcs-migrate and nb_pyexporter.
 
 ## Install
 
-hc-migrate needs Python 3.11 or later and nothing else.
+hc-migrate needs Python 3.11 or later (and black, which comes with it).
 
 ```console
 $ pipx install hc-migrate        # or: uv tool install hc-migrate
 $ uvx hc-migrate calcs/          # or run it once, without installing
 ```
 
-The converted notebooks need handcalcs 2.0.0rc5 or later.
+The scripts and converted notebooks need handcalcs 2.0.
+`pip install "hc-migrate[nbconvert]"` adds `jupyter nbconvert --to hcpy`.
 
-## What it converts
+## What it converts from v1
 
 | handcalcs v1 | handcalcs v2 |
 |---|---|
@@ -85,16 +100,21 @@ nested), and `phiM` is φM. `--v1-names` keeps the v1 look.
 ## Options
 
 ```text
--o, --output DEST     where to write (default: SOURCE with "_v2" added)
--f, --force           overwrite DEST if it exists
--n, --dry-run         report what would change without writing anything
+-o, --output DEST     where to write: a file, or a folder for a tree
+--to {py,ipynb}       py: notebooks become v2 scripts (default);
+                      ipynb: v1 notebooks are converted and stay notebooks
+--from {auto,v1,v2}   the handcalcs the source was written for (default: auto)
+-f, --force           overwrite files (or DEST) that exist (also --overwrite)
+-n, --dry-run         report what would be written, and write nothing
 --report FILE         also write the report to FILE (Markdown)
---keep-v1-precision   3 decimal places where v1 used its default
+--show-code           scripts: show the code cells the notebook didn't render
+--no-black            scripts: don't format with black
+--keep-v1-precision   v1: 3 decimal places where v1 used its default
                       (v2's default is 5 significant figures)
---v1-names            keep v1's nested subscripts and Greek names
---clear-outputs       clear the outputs of converted cells
+--v1-names            v1: keep v1's nested subscripts and Greek names
+--clear-outputs       --to ipynb: clear the outputs of converted cells
 --exclude PATTERN     skip matching files and folders (repeatable)
---only-converted      in a folder, write only notebooks and Python files
+--only-converted      with a folder DEST, write only notebooks and Python files
 -q, --quiet           report only files with warnings
 ```
 
@@ -112,7 +132,8 @@ $ uv run --group test pytest
 ```
 
 The tests convert a v1 notebook and run the result with handcalcs v2 in an
-IPython shell, so every converted cell is checked to work.
+IPython shell, so every converted cell is checked to work, and render the
+script exported from it with handcalcs.
 
 ## License
 
