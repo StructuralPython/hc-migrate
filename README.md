@@ -2,13 +2,13 @@
 
 Two conversions for Jupyter notebooks and [handcalcs](https://github.com/connorferster/handcalcs):
 
-1. **`--to nb`**: update notebooks written for handcalcs v1 so they work with
+1. **`--to ipynb`**: update notebooks written for handcalcs v1 so they work with
    handcalcs v2. They stay notebooks.
 2. **`--to py`** (the default): turn notebooks, written for v1 or v2, into
    handcalcs v2 scripts (`.py`), ready to render or publish.
 
 ```console
-$ hc-migrate beam.ipynb --to nb --output beam_v2.ipynb
+$ hc-migrate beam.ipynb --to ipynb --output beam_v2.ipynb
 $ hc-migrate beam.ipynb --to py --output beam.py
 $ hc-migrate calcs/ --to py --output scripts --report report.md
 exported          Concrete/Basic Beam Shear.ipynb -> Basic Beam Shear.py  (5 changes, 0 warnings)
@@ -54,7 +54,7 @@ $ uvx hc-migrate calcs/          # or run it once, without installing
 The scripts and converted notebooks need handcalcs 2.0.
 `pip install "hc-migrate[nbconvert]"` adds `jupyter nbconvert --to hcpy`.
 
-## v1 notebooks to v2 (`--to nb`)
+## v1 notebooks to v2 (`--to ipynb`)
 
 The same conversion runs before a v1 notebook is exported with `--to py`.
 A `.py` file written for v1 is converted too.
@@ -104,8 +104,8 @@ nested), and `phiM` is φM. `--v1-names` keeps the v1 look.
 
 ```text
 -o, --output DEST     where to write: a file, or a folder for a tree
---to {py,nb}          py: notebooks become v2 scripts (default);
-                      nb: v1 notebooks are converted to v2 and stay notebooks
+--to {py,ipynb}       py: notebooks become v2 scripts (default);
+                      ipynb: v1 notebooks are converted to v2 and stay notebooks
 --from {auto,v1,v2}   the handcalcs the source was written for (default: auto)
 -f, --force           overwrite files (or DEST) that exist (also --overwrite)
 -n, --dry-run         report what would be written, and write nothing
@@ -115,7 +115,7 @@ nested), and `phiM` is φM. `--v1-names` keeps the v1 look.
 --keep-v1-precision   v1: 3 decimal places where v1 used its default
                       (v2's default is 5 significant figures)
 --v1-names            v1: keep v1's nested subscripts and Greek names
---clear-outputs       --to nb: clear the outputs of converted cells
+--clear-outputs       --to ipynb: clear the outputs of converted cells
 --exclude PATTERN     skip matching files and folders (repeatable)
 --only-converted      with a folder DEST, write only notebooks and Python files
 -q, --quiet           report only files with warnings

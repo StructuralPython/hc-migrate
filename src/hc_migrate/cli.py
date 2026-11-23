@@ -1,9 +1,9 @@
 """
 The ``hc-migrate`` command.
 
-    hc-migrate calc.ipynb --to nb -o calc_v2.ipynb   # v1 notebook -> v2 notebook
-    hc-migrate calc.ipynb --to py -o calc.py         # notebook -> v2 script
-    hc-migrate calcs/ --to py --output scripts       # a tree of notebooks -> scripts
+    hc-migrate calc.ipynb --to ipynb -o calc_v2.ipynb  # v1 notebook -> v2 notebook
+    hc-migrate calc.ipynb --to py -o calc.py           # notebook -> v2 script
+    hc-migrate calcs/ --to py --output scripts         # notebooks -> scripts
 
 Existing files are never changed: a script is written next to its notebook
 (or under DEST), and a converted notebook or ``.py`` file is a new file.
@@ -30,10 +30,11 @@ DEFAULT_EXCLUDES = (".git", ".ipynb_checkpoints", "__pycache__", ".venv", ".DS_S
 DESCRIPTION = """\
 Two conversions:
 
-  --to nb   update notebooks (and .py files) written for handcalcs v1 so they
-            work with handcalcs v2. They stay notebooks.
-  --to py   turn notebooks, written for handcalcs v1 or v2, into handcalcs v2
-            scripts (.py) that render as the notebook showed (the default).
+  --to ipynb  update notebooks (and .py files) written for handcalcs v1 so
+              they work with handcalcs v2. They stay notebooks.
+  --to py     turn notebooks, written for handcalcs v1 or v2, into handcalcs
+              v2 scripts (.py) that render as the notebook showed (the
+              default).
 
 In a script, Markdown cells become comments (prose and headings), %%render
 cells become plain lines, and the other code cells run but are hidden. A v1
@@ -46,13 +47,13 @@ files converted. Existing files are never changed.
 
 EPILOG = f"""\
 examples:
-  hc-migrate beam.ipynb                  writes beam.py
+  hc-migrate beam.ipynb                        writes beam.py
   hc-migrate beam.ipynb -o out/beam.py
-  hc-migrate calcs/                      writes a .py next to each notebook
+  hc-migrate calcs/                            writes a .py next to each notebook
   hc-migrate calcs/ -o scripts --report report.md
-  hc-migrate beam.ipynb --to nb          writes beam_v2.ipynb (v1 -> v2)
-  hc-migrate calcs/ --to nb --output v2  writes v2/, the notebooks converted
-  hc-migrate calcs/ --dry-run            only reports what would be written
+  hc-migrate beam.ipynb --to ipynb             writes beam_v2.ipynb (v1 -> v2)
+  hc-migrate calcs/ --to ipynb --output v2     writes v2/, the notebooks converted
+  hc-migrate calcs/ --dry-run                  only reports what would be written
 
 What changes, and what to check by hand afterwards, is reported for each file.
 The handcalcs v1 to v2 guide: {GUIDE}
@@ -93,10 +94,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--to",
-        choices=("py", "nb"),
+        choices=("py", "ipynb"),
         default="py",
         help="py: notebooks (v1 or v2) become handcalcs v2 scripts (the "
-        "default); nb: notebooks written for v1 are converted to v2 and stay "
+        "default); ipynb: notebooks written for v1 are converted to v2 and stay "
         "notebooks",
     )
     parser.add_argument(
@@ -149,7 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--clear-outputs",
         action="store_true",
-        help="--to nb: clear the outputs of converted cells (they show the "
+        help="--to ipynb: clear the outputs of converted cells (they show the "
         "v1 render)",
     )
     parser.add_argument(
@@ -391,7 +392,7 @@ def main(argv: list[str] | None = None) -> int:
     totals = []
     if summary.exported or args.to == "py":
         totals.append(plural(summary.exported, "notebook") + " exported")
-    if summary.converted or summary.unchanged or args.to == "nb":
+    if summary.converted or summary.unchanged or args.to == "ipynb":
         totals.append(plural(summary.converted, "file") + " converted")
         totals.append(f"{summary.unchanged} already fine")
     if source.is_dir() and summary.copied:

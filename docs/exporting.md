@@ -34,7 +34,7 @@ The script is checked to be valid Python and formatted with black
 
 hc-migrate tells a v1 notebook from a v2 one (v1 has to `import handcalcs.render`;
 its `%%render` arguments, `%%tex` and options give it away too) and converts a v1
-notebook to v2 before exporting it, as [`--to nb`](converting.md) would. When
+notebook to v2 before exporting it, as [`--to ipynb`](converting.md) would. When
 nothing tells, it's treated as v2 and the report says so; `--from v1` or
 `--from v2` decides.
 

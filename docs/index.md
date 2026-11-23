@@ -3,13 +3,13 @@
 Two conversions for Jupyter notebooks and
 [handcalcs](https://handcalcs.structuralpython.com/):
 
-1. **`--to nb`**: update notebooks written for handcalcs v1 so they work with
+1. **`--to ipynb`**: update notebooks written for handcalcs v1 so they work with
    handcalcs v2. They stay notebooks. See [](converting.md).
 2. **`--to py`** (the default): turn notebooks, written for v1 or v2, into
    handcalcs v2 scripts, ready to render or publish. See [](exporting.md).
 
 ```console
-$ hc-migrate beam.ipynb --to nb --output beam_v2.ipynb
+$ hc-migrate beam.ipynb --to ipynb --output beam_v2.ipynb
 $ hc-migrate beam.ipynb --to py --output beam.py
 ```
 
