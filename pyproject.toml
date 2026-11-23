@@ -1,20 +1,28 @@
 [project]
 name = "hc-migrate"
-version = "0.1.0"
-description = "Convert Jupyter notebooks and scripts written for handcalcs v1 to handcalcs v2."
+version = "0.2.0"
+description = "Turn Jupyter notebooks into handcalcs v2 scripts, and migrate handcalcs v1 notebooks and scripts to v2."
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Connor Ferster" }]
 requires-python = ">=3.11"
-dependencies = []
+# black formats the exported scripts.
+dependencies = ["black>=25.1"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Framework :: Jupyter",
     "Environment :: Console",
 ]
 
+[project.optional-dependencies]
+# `jupyter nbconvert --to hcpy`: the export as an nbconvert exporter.
+nbconvert = ["nbconvert>=7.16"]
+
 [project.scripts]
 hc-migrate = "hc_migrate.cli:main"
+
+[project.entry-points."nbconvert.exporters"]
+hcpy = "hc_migrate.nbconvert_exporter:HandcalcsScriptExporter"
 
 [project.urls]
 Homepage = "https://github.com/StructuralPython/hc-migrate"
@@ -27,6 +35,7 @@ test = [
     "ipython>=9.18.1",
     "handcalcs>=2.0.0rc5",
     "sympy>=1.12",
+    "nbconvert>=7.16",
 ]
 lint = ["black>=25.1"]
 # The documentation site (docs/), built and published by publish-docs-to-bunny.yml.

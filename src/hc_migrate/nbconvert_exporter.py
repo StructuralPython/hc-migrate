@@ -1,45 +1,38 @@
-"""nbconvert exporter producing clean, plain Python scripts from notebooks."""
+"""
+The export as an nbconvert exporter: ``jupyter nbconvert --to hcpy calc.ipynb``
+(with ``pip install "hc-migrate[nbconvert]"``). It writes what ``hc-migrate``
+writes for a notebook (see ``export``).
+"""
 
 from __future__ import annotations
 
-import copy
+from nbconvert.exporters import Exporter
+from traitlets import Bool, Unicode
 
-from nbconvert.exporters import PythonExporter
-from traitlets import Bool
-
-from .transforms import clean_notebook, postprocess
+from .export import ExportOptions, export_notebook
 
 
-class CleanPythonExporter(PythonExporter):
-    """Export a notebook to a plain Python script.
+class HandcalcsScriptExporter(Exporter):
+    """Export a notebook as a handcalcs v2 script (see ``hc_migrate.export``)."""
 
-    Compared with the stock ``PythonExporter`` this:
+    export_from_notebook = "handcalcs v2 script"
+    output_mimetype = "text/x-python"
 
-    * strips YAML front matter from the first cell,
-    * unwraps cell magics (``%%render params`` ...) so the cell body becomes
-      ordinary Python lines, and drops line magics / shell escapes,
-    * removes ``# In[N]:`` cell reference comments,
-    * removes the shebang and ``# coding`` header,
-    * collapses excess whitespace and formats the result with black.
+    source = Unicode(
+        "auto", help='The handcalcs the notebook was written for: "v1", "v2" or "auto".'
+    ).tag(config=True)
+    show_code = Bool(False, help="Show the code cells that weren't rendered.").tag(
+        config=True
+    )
+    use_black = Bool(True, help="Format the script with black.").tag(config=True)
 
-    Usable directly or via ``jupyter nbconvert --to cleanpy``.
-    """
-
-    export_from_notebook = "Clean Python Script"
-
-    exclude_input_prompt = Bool(True, help="Omit `# In[N]:` comments.").tag(config=True)
-    use_black = Bool(True, help="Format the output with black.").tag(config=True)
-
-    def default_filters(self):
-        # Magics are already stripped in `clean_notebook`, so IPython's syntax
-        # transform is unnecessary; making it a no-op keeps output identical
-        # whether or not IPython is installed (and silences its warning).
-        for name, func in super().default_filters():
-            yield name, (lambda s: s) if name == "ipython2python" else func
+    def _file_extension_default(self):
+        return ".py"
 
     def from_notebook_node(self, nb, resources=None, **kw):
-        nb = copy.deepcopy(nb)
-        clean_notebook(nb)
-        output, resources = super().from_notebook_node(nb, resources, **kw)
+        nb_copy, resources = super().from_notebook_node(nb, resources, **kw)
         name = (resources or {}).get("metadata", {}).get("name", "<notebook>")
-        return postprocess(output, use_black=self.use_black, source_name=name), resources
+        options = ExportOptions(
+            source=self.source, show_code=self.show_code, black=self.use_black
+        )
+        return export_notebook(dict(nb_copy), options, name).text, resources

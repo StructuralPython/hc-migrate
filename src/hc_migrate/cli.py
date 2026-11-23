@@ -1,10 +1,12 @@
 """
 The ``hc-migrate`` command.
 
-    hc-migrate calc.ipynb               # writes calc_v2.ipynb
-    hc-migrate projects/ -o projects-v2 # converts a copy of the tree
+    hc-migrate calc.ipynb                    # writes calc.py, a handcalcs v2 script
+    hc-migrate calcs/ -o scripts             # a tree of notebooks -> a tree of scripts
+    hc-migrate calc.ipynb --to ipynb         # writes calc_v2.ipynb (v1 -> v2)
 
-The source is never changed.
+Existing files are never changed: a script is written next to its notebook
+(or under DEST), and a converted notebook or ``.py`` file is a new file.
 """
 
 from __future__ import annotations
@@ -19,41 +21,52 @@ from pathlib import Path
 
 from . import __version__
 from .convert import GUIDE
-from .notebook import FileResult, Options, convert_notebook, convert_script
+from .export import ExportOptions, export_notebook
+from .notebook import FileResult, convert_notebook, convert_script
 
 CONVERTIBLE = (".ipynb", ".py")
 DEFAULT_EXCLUDES = (".git", ".ipynb_checkpoints", "__pycache__", ".venv", ".DS_Store")
 
 DESCRIPTION = """\
-Convert Jupyter notebooks (.ipynb) and Python files (.py) written for
-handcalcs v1 to handcalcs v2.
+Turn Jupyter notebooks into handcalcs v2 scripts (.py), and convert notebooks
+and Python files written for handcalcs v1 to v2.
 
-SOURCE is a file or a directory. A file is written next to it with "_v2" added
-to its name; a directory is copied, with every file in it, to "<SOURCE>_v2",
-and the notebooks and Python files in the copy are converted. The source is
-never changed. Files that don't use handcalcs are copied as they are.
+A notebook becomes a script that renders as the notebook showed: Markdown
+cells become comments (prose and headings), %%render cells become plain lines,
+and the other code cells run but are hidden. A notebook written for handcalcs
+v1 is converted to v2 on the way. With --to ipynb, a notebook is converted
+from v1 to v2 and stays a notebook.
+
+SOURCE is a file or a directory. A directory is searched for notebooks (and
+.py files), and with -o its tree is copied to DEST, the notebooks and Python
+files converted. Existing files are never changed.
 """
 
 EPILOG = f"""\
 examples:
-  hc-migrate beam.ipynb                  writes beam_v2.ipynb
-  hc-migrate beam.ipynb -o new/beam.ipynb
-  hc-migrate calcs/                      writes calcs_v2/
-  hc-migrate calcs/ -o calcs-v2 --report report.md
-  hc-migrate calcs/ --dry-run            only reports what would change
+  hc-migrate beam.ipynb                  writes beam.py
+  hc-migrate beam.ipynb -o out/beam.py
+  hc-migrate calcs/                      writes a .py next to each notebook
+  hc-migrate calcs/ -o scripts --report report.md
+  hc-migrate beam.ipynb --to ipynb       writes beam_v2.ipynb (v1 -> v2)
+  hc-migrate calcs/ --to ipynb           writes calcs_v2/
+  hc-migrate calcs/ --dry-run            only reports what would be written
 
 What changes, and what to check by hand afterwards, is reported for each file.
-The v1 to v2 guide: {GUIDE}
+The handcalcs v1 to v2 guide: {GUIDE}
 """
 
 
 @dataclass
 class Summary:
+    exported: int = 0
     converted: int = 0
     unchanged: int = 0
     copied: int = 0
+    skipped: int = 0
     failed: int = 0
     warnings: int = 0
+    written: set[Path] = field(default_factory=set)
     report: list[str] = field(default_factory=list)
 
 
@@ -73,16 +86,36 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         metavar="DEST",
         type=Path,
-        help='where to write (default: SOURCE with "_v2" added)',
+        help="where to write: a file, or a directory for a tree "
+        "(default: next to SOURCE)",
     )
     parser.add_argument(
-        "-f", "--force", action="store_true", help="overwrite DEST if it exists"
+        "--to",
+        choices=("py", "ipynb"),
+        default="py",
+        help="py: notebooks become handcalcs v2 scripts (the default); "
+        "ipynb: notebooks are converted from v1 to v2 and stay notebooks",
+    )
+    parser.add_argument(
+        "--from",
+        dest="source_version",
+        choices=("auto", "v1", "v2"),
+        default="auto",
+        help="the handcalcs the source was written for (default: tell from "
+        "the source; v2 when nothing tells)",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        "--overwrite",
+        action="store_true",
+        help="overwrite files (or DEST) that exist",
     )
     parser.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
-        help="report what would change without writing anything",
+        help="report what would be written, and write nothing",
     )
     parser.add_argument(
         "--report",
@@ -91,21 +124,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="also write the report to FILE (Markdown)",
     )
     parser.add_argument(
+        "--show-code",
+        action="store_true",
+        help="scripts: show the code cells the notebook didn't render",
+    )
+    parser.add_argument(
+        "--no-black", action="store_true", help="scripts: don't format with black"
+    )
+    parser.add_argument(
         "--keep-v1-precision",
         action="store_true",
-        help="show numbers with 3 decimal places where v1 used its default "
+        help="v1: show numbers with 3 decimal places where v1 used its default "
         "(v2's default is 5 significant figures)",
     )
     parser.add_argument(
         "--v1-names",
         action="store_true",
-        help="keep v1's nested subscripts (x_a_b) and Greek names (phiM) with "
-        "set_option calls",
+        help="v1: keep v1's nested subscripts (x_a_b) and Greek names (phiM) "
+        "with set_option calls",
     )
     parser.add_argument(
         "--clear-outputs",
         action="store_true",
-        help="clear the outputs of converted cells (they show the v1 render)",
+        help="--to ipynb: clear the outputs of converted cells (they show the "
+        "v1 render)",
     )
     parser.add_argument(
         "--exclude",
@@ -118,7 +160,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--only-converted",
         action="store_true",
-        help="in a directory, write only notebooks and Python files, not other files",
+        help="with a directory DEST, write only notebooks and Python files, "
+        "not the other files",
     )
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="report only files with warnings"
@@ -129,14 +172,35 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def default_output(source: Path) -> Path:
+def default_output(source: Path, to: str) -> Path | None:
+    """Where to write when no DEST is given; None: next to each notebook."""
     if source.is_dir():
+        if to == "py":
+            return None
         return source.with_name(source.resolve().name + "_v2")
+    if to == "py" and source.suffix == ".ipynb":
+        return source.with_suffix(".py")
     return source.with_name(f"{source.stem}_v2{source.suffix}")
 
 
-def convert_file(path: Path, options: Options) -> FileResult:
+def file_dest(source: Path, output: Path | None, to: str) -> Path:
+    """Where a single SOURCE file goes: DEST, or a file in DEST if it is a directory."""
+    if output is None:
+        return default_output(source, to)
+    if output.is_dir() or (output.suffix == "" and not output.exists()):
+        name = source.with_suffix(".py").name if exports(source, to) else source.name
+        return output / name
+    return output
+
+
+def exports(path: Path, to: str) -> bool:
+    return to == "py" and path.suffix == ".ipynb"
+
+
+def convert_file(path: Path, to: str, options: ExportOptions) -> FileResult:
     text = path.read_text(encoding="utf-8")
+    if exports(path, to):
+        return export_notebook(text, options, path.stem)
     if path.suffix == ".ipynb":
         return convert_notebook(text, options)
     return convert_script(text, options)
@@ -155,10 +219,11 @@ def handle_file(
     dest: Path,
     shown_as: str,
     args: argparse.Namespace,
-    options: Options,
+    options: ExportOptions,
     summary: Summary,
+    per_file_force: bool,
 ) -> None:
-    """Convert (or copy) one file and record it in the summary."""
+    """Convert, export or copy one file and record it in the summary."""
     if source.suffix not in CONVERTIBLE:
         if not args.only_converted:
             if not args.dry_run:
@@ -166,35 +231,58 @@ def handle_file(
                 shutil.copy2(source, dest)
             summary.copied += 1
         return
+    if dest.resolve() in summary.written:
+        summary.skipped += 1
+        print(f"skipped  {shown_as}: another file was written to {dest}")
+        return
+    if per_file_force and dest.exists() and not args.force:
+        summary.skipped += 1
+        if not args.quiet:
+            print(f"skipped  {shown_as}: {dest} exists (use --force)")
+        return
+    exporting = exports(source, args.to)
     try:
-        result = convert_file(source, options)
+        result = convert_file(source, args.to, options)
     except (ValueError, UnicodeDecodeError, OSError) as error:
         summary.failed += 1
-        print(f"FAILED  {shown_as}: {error}; copied unchanged", file=sys.stderr)
+        if exporting:
+            print(f"FAILED   {shown_as}: {error}", file=sys.stderr)
+            summary.report.append(f"## {shown_as}\n\nFailed: {error}.\n")
+            return
+        print(f"FAILED   {shown_as}: {error}; copied unchanged", file=sys.stderr)
         summary.report.append(f"## {shown_as}\n\nFailed: {error}. Copied unchanged.\n")
         if not args.dry_run:
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, dest)
         return
+    summary.written.add(dest.resolve())
     if not args.dry_run:
         dest.parent.mkdir(parents=True, exist_ok=True)
-        if result.changed:
+        if exporting:
+            dest.write_text(result.text, encoding="utf-8", newline="\n")
+        elif result.changed:
             dest.write_text(result.text, encoding="utf-8", newline="")
             shutil.copystat(source, dest)
         else:
             shutil.copy2(source, dest)
-    if not result.uses_handcalcs:
+    if not exporting and not result.uses_handcalcs:
         summary.copied += 1
         return
     warnings = result.warnings
     summary.warnings += len(warnings)
-    if result.changed:
+    if exporting:
+        summary.exported += 1
+        status = "exported"
+    elif result.changed:
         summary.converted += 1
+        status = "converted"
     else:
         summary.unchanged += 1
+        status = "no changes needed"
     changes = [(w, n) for w, n in result.notes if n.level == "change"]
-    status = "converted" if result.changed else "no changes needed"
     line = f"{status:<17} {shown_as}"
+    if exporting:
+        line += f" -> {dest.name}"
     if changes or warnings:
         line += (
             f"  ({plural(len(changes), 'change')}, {plural(len(warnings), 'warning')})"
@@ -234,55 +322,88 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
     args = parser.parse_args(argv)
-    source: Path = args.source
+    # Windows PowerShell passes '~' through as it is.
+    source: Path = args.source.expanduser()
+    output: Path | None = args.output.expanduser() if args.output else None
     if not source.exists():
         parser.error(f"{source}: no such file or directory")
     if source.is_file() and source.suffix not in CONVERTIBLE:
         parser.error(f"{source}: not a notebook (.ipynb) or Python file (.py)")
-    dest: Path = args.output or default_output(source)
-    if dest.resolve() == source.resolve():
-        parser.error(
-            "DEST is SOURCE: the source is never changed, so give another DEST"
-        )
-    if source.is_dir() and dest.resolve().is_relative_to(source.resolve()):
-        parser.error("DEST is inside SOURCE: choose a DEST outside it")
-    if dest.exists() and not (args.force or args.dry_run):
-        parser.error(f"{dest} exists: use --force to overwrite it")
-    options = Options(
+    options = ExportOptions(
+        source=args.source_version,
         keep_v1_precision=args.keep_v1_precision,
         v1_names=args.v1_names,
         clear_outputs=args.clear_outputs,
+        show_code=args.show_code,
+        black=not args.no_black,
     )
 
     summary = Summary()
     if source.is_file():
-        handle_file(source, dest, str(source), args, options, summary)
-    else:
+        dest = file_dest(source, output, args.to)
+        if dest.resolve() == source.resolve():
+            parser.error("DEST is SOURCE: existing files are never changed")
+        if dest.exists() and not (args.force or args.dry_run):
+            parser.error(f"{dest} exists: use --force to overwrite it")
+        handle_file(source, dest, str(source), args, options, summary, False)
+        shown_dest = dest
+    elif output is None and args.to == "py":
+        # Each notebook's script next to it; nothing else is written.
         for relative in walk(source, args.exclude):
+            if relative.suffix == ".ipynb":
+                path = source / relative
+                handle_file(
+                    path,
+                    path.with_suffix(".py"),
+                    relative.as_posix(),
+                    args,
+                    options,
+                    summary,
+                    True,
+                )
+        shown_dest = source
+    else:
+        dest = output or default_output(source, args.to)
+        if dest.resolve() == source.resolve():
+            parser.error("DEST is SOURCE: existing files are never changed")
+        if dest.resolve().is_relative_to(source.resolve()):
+            parser.error("DEST is inside SOURCE: choose a DEST outside it")
+        if dest.exists() and not (args.force or args.dry_run):
+            parser.error(f"{dest} exists: use --force to overwrite it")
+        for relative in walk(source, args.exclude):
+            target = dest / relative
+            if exports(relative, args.to):
+                target = target.with_suffix(".py")
             handle_file(
                 source / relative,
-                dest / relative,
+                target,
                 relative.as_posix(),
                 args,
                 options,
                 summary,
+                False,
             )
+        shown_dest = dest
 
-    totals = [
-        plural(summary.converted, "file") + " converted",
-        f"{summary.unchanged} already fine",
-        plural(summary.warnings, "warning"),
-    ]
-    if source.is_dir():
-        totals.insert(2, f"{summary.copied} copied")
+    totals = []
+    if summary.exported or args.to == "py":
+        totals.append(plural(summary.exported, "notebook") + " exported")
+    if summary.converted or summary.unchanged or args.to == "ipynb":
+        totals.append(plural(summary.converted, "file") + " converted")
+        totals.append(f"{summary.unchanged} already fine")
+    if source.is_dir() and summary.copied:
+        totals.append(f"{summary.copied} copied")
+    if summary.skipped:
+        totals.append(f"{summary.skipped} skipped")
+    totals.append(plural(summary.warnings, "warning"))
     if summary.failed:
         totals.append(f"{summary.failed} failed")
     verb = "Would write" if args.dry_run else "Wrote"
     print(f"\n{', '.join(totals)}.")
-    if summary.converted or summary.copied or summary.unchanged:
-        print(f"{verb} {dest}")
+    if summary.written or summary.copied:
+        print(f"{verb} {shown_dest}")
     if args.report:
-        heading = f"# handcalcs v1 to v2: {source}\n\n{', '.join(totals)}.\n\n"
+        heading = f"# hc-migrate: {source}\n\n{', '.join(totals)}.\n\n"
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(heading + "\n".join(summary.report), encoding="utf-8")
         print(f"Report: {args.report}")
