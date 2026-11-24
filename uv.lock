@@ -439,7 +439,7 @@ wheels = [
 
 [[package]]
 name = "handcalcs"
-version = "2.0.0rc5"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "innerscope" },
@@ -447,14 +447,14 @@ dependencies = [
     { name = "pfst" },
     { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/38/54/2983e27d70ef84c9975594207736428bf45d20b2fdbd1d32f530c287f964/handcalcs-2.0.0rc5.tar.gz", hash = "sha256:a2dc163679559f45c3064f8841c5c234fb6aa7516744ea70a01c7eb666266dba", size = 191089, upload-time = "2026-11-19T02:44:15.44Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/4f/ad909f386fec25bc9034d2ca4f26fe9422f976ec2715c04c76b0aae5d55e/handcalcs-2.0.0.tar.gz", hash = "sha256:6f189c404c630c4e0117284d6de6ac357c5e2f074d49293c558d99f3dcb3764a", size = 200195, upload-time = "2026-11-24T06:40:05.123Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/87/4ec1aa695871478acfd9d73ba2c6a2510a0c0d3ad1284554b21c938a8b52/handcalcs-2.0.0rc5-py3-none-any.whl", hash = "sha256:0e4d955cf66a285e98d71d12eceda8021df6a8e5460aa8de2509695186ccbbe0", size = 215655, upload-time = "2026-11-19T02:44:13.555Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/65/85a67390085518743e17ac1c4b80e562f3de7d92ff6474bbbd0689e83ac5/handcalcs-2.0.0-py3-none-any.whl", hash = "sha256:4e25ab4bd3c2a9897a9dc5b4ad765b66b1632d1f07b2c8c6385f4a173862d9da", size = 225095, upload-time = "2026-11-24T06:40:03.445Z" },
 ]
 
 [[package]]
 name = "hc-migrate"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "black" },
@@ -501,7 +501,7 @@ doc = [
 ]
 lint = [{ name = "black", specifier = ">=25.1" }]
 test = [
-    { name = "handcalcs", specifier = ">=2.0.0rc5" },
+    { name = "handcalcs", specifier = ">=2.0.0" },
     { name = "ipython", specifier = ">=9.18.1" },
     { name = "nbconvert", specifier = ">=7.16" },
     { name = "pytest", specifier = ">=8" },
