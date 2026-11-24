@@ -27,6 +27,6 @@ v1's `%%render` arguments are read exactly as v1 read them, including its
 habit of accepting part of a word (`%%render param` is `params`).
 
 
-The converted notebooks need handcalcs 2.0.0rc5 or later. For what changed
+The converted notebooks need handcalcs 2.0.0 or later. For what changed
 between the versions, see
 [Coming from handcalcs v1](https://handcalcs.structuralpython.com/getting-started/migrating-from-v1.html).

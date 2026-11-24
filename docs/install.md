@@ -26,7 +26,7 @@ $ uvx hc-migrate calcs/
 `jupyter nbconvert --to hcpy`, install the `nbconvert` extra:
 `pip install "hc-migrate[nbconvert]"`.
 
-The scripts and converted notebooks need **handcalcs 2.0** (2.0.0rc5 or later):
+The scripts and converted notebooks need **handcalcs 2.0**:
 
 ```console
 $ pip install --upgrade handcalcs

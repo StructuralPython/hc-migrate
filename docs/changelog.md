@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (2026-11-24)
+
+- handcalcs 2.0.0 is released: the docs and the test dependencies now ask for
+  handcalcs 2.0.0 instead of a release candidate.
+
 ## 0.2.0 (2026-11-23)
 
 The first release of hc-migrate, which joins two tools: handcalcs-migrate

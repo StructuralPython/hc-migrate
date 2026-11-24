@@ -1,6 +1,6 @@
 [project]
 name = "hc-migrate"
-version = "0.2.0"
+version = "0.2.1"
 description = "Turn Jupyter notebooks into handcalcs v2 scripts, and migrate handcalcs v1 notebooks and scripts to v2."
 readme = "README.md"
 license = "Apache-2.0"
@@ -33,7 +33,7 @@ Homepage = "https://github.com/StructuralPython/hc-migrate"
 test = [
     "pytest>=8",
     "ipython>=9.18.1",
-    "handcalcs>=2.0.0rc5",
+    "handcalcs>=2.0.0",
     "sympy>=1.12",
     "nbconvert>=7.16",
 ]
